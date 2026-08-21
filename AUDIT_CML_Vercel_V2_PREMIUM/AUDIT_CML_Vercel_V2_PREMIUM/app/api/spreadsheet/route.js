@@ -89,9 +89,17 @@ export async function POST(request) {
 
 
 
-    const rows = csv
-      .split("\n")
-      .map(row => row.split(","));
+   const rows = csv
+.split("\n")
+.map(row => row.split(","));
+
+
+console.log("TOTAL ROW:", rows.length);
+
+console.log(
+"DATA AWAL:",
+rows.slice(0,10)
+);
 
 
 
@@ -195,15 +203,7 @@ export async function POST(request) {
 
 
 
-        if(
-
-          tanggalSheet &&
-
-          tanggalSheet.includes(
-            tanggalPilih
-          )
-
-        ){
+        if(tanggalSheet){
 
 
 
