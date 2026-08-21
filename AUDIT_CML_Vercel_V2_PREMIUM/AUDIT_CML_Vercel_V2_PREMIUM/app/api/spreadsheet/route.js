@@ -2,12 +2,10 @@ export async function POST(request) {
 
   try {
 
-
     const {
       url,
       tanggal
     } = await request.json();
-
 
 
     const idMatch = url.match(
@@ -27,78 +25,59 @@ export async function POST(request) {
     const spreadsheetId = idMatch[1];
 
 
+    // Daftar semua tab spreadsheet
+    const sheets = [
 
-    /*
-      Ambil metadata semua sheet
-    */
+      {
+        name:"ALEX",
+        gid:"0"
+      },
 
-    const htmlUrl =
-`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+      {
+        name:"LEO",
+        gid:"1441670750"
+      },
 
+      {
+        name:"FEMAS",
+        gid:"377635019"
+      },
 
+      {
+        name:"MARSHA",
+        gid:"226541219"
+      },
 
-const htmlResponse =
-await fetch(htmlUrl);
+      {
+        name:"BAGAS",
+        gid:"1681223704"
+      },
 
+      {
+        name:"MARTIN",
+        gid:"634424372"
+      },
 
+      {
+        name:"ALVIN",
+        gid:"221114496"
+      },
 
-const html =
-await htmlResponse.text();
+      {
+        name:"SANDY",
+        gid:"2081640526"
+      },
 
+      {
+        name:"ANDRE",
+        gid:"2051849740"
+      }
 
-
-let sheets=[];
-
-
-
-const regex =
-/\{"sheetId":"(\d+)","title":"([^"]+)"/g;
-
-
-
-let match;
-
-
-
-while(
-(match = regex.exec(html))
-){
-
-sheets.push({
-
-gid:match[1],
-
-name:match[2]
-
-});
-
-}
-
-
-
-console.log(
-"SHEET TERDETEKSI:",
-sheets
-);
-
-
-
-if(sheets.length===0){
-
-return Response.json({
-
-error:"Sheet tidak terbaca. Pastikan spreadsheet public."
-
-});
-
-}
-
-
+    ];
 
 
 
     let hasil=[];
-
 
 
     const tanggalPilih =
@@ -108,15 +87,7 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
 
-
-
-    /*
-      Loop semua tab
-    */
-
-
     for(const sheet of sheets){
-
 
 
       const csvUrl =
@@ -135,12 +106,7 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
 
-
-      /*
-        CSV parser
-      */
-
-
+      // CSV parser
       const rows =
       csv
       .split("\n")
@@ -158,8 +124,7 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
         for(let i=0;i<line.length;i++){
 
 
-          let char=line[i];
-
+          const char=line[i];
 
 
           if(char === '"'){
@@ -181,10 +146,9 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
           else{
 
-            current+=char;
+            current += char;
 
           }
-
 
         }
 
@@ -195,7 +159,8 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
         return data.map(x=>
 
-          x.replace(/^"|"$/g,"")
+          x
+          .replace(/^"|"$/g,"")
           .trim()
 
         );
@@ -206,15 +171,8 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
 
-
-      /*
-        Data mulai baris 5
-        index 4
-      */
-
-
+      // Data mulai A5
       rows.forEach((row,index)=>{
-
 
 
         if(index < 4)
@@ -226,30 +184,8 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
 
-          const no =
-          row[0];
-
-
-
           const tanggalSheet =
           row[1];
-
-
-
-          const idMember =
-          row[3];
-
-
-
-          const nominal =
-          row[4];
-
-
-
-          const keterangan =
-          row[5];
-
-
 
 
 
@@ -280,19 +216,18 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
               member:
-              idMember,
+              row[3],
 
 
               nominal:
-              nominal,
+              row[4],
 
 
               keterangan:
-              keterangan
+              row[5] || ""
 
 
             });
-
 
 
           }
@@ -309,26 +244,18 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
 
-
-
     return Response.json({
 
-
       success:true,
-
 
       jumlahSheet:
       sheets.length,
 
-
       totalData:
       hasil.length,
 
-
       data:
       hasil
-
-
 
     });
 
@@ -348,6 +275,5 @@ error:"Sheet tidak terbaca. Pastikan spreadsheet public."
 
 
   }
-
 
 }
