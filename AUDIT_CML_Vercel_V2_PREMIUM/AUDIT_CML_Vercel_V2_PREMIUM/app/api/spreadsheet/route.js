@@ -8,7 +8,6 @@ export async function POST(request) {
     } = await request.json();
 
 
-
     const idMatch = url.match(
       /\/d\/(.*?)\//
     );
@@ -23,9 +22,7 @@ export async function POST(request) {
     }
 
 
-
     const spreadsheetId = idMatch[1];
-
 
 
     const sheets = [
@@ -43,70 +40,23 @@ export async function POST(request) {
     ];
 
 
-
     let hasil = [];
 
 
 
-    // =====================
-    // KONVERSI TANGGAL INPUT
-    // =====================
-
-    let filterHari = "";
-    let filterBulan = "";
-    let filterTahun = "";
-
+    // ambil tanggal hari saja
+    let tanggalInput = "";
 
     if(tanggal){
 
-      const pecah =
-      tanggal.split("/");
-
-
-      filterHari =
-      String(Number(pecah[0]));
-
-
-
-      const bulanNama = [
-
-        "",
-        "Januari",
-        "Februari",
-        "Maret",
-        "April",
-        "Mei",
-        "Juni",
-        "Juli",
-        "Agustus",
-        "September",
-        "Oktober",
-        "November",
-        "Desember"
-
-      ];
-
-
-
-      filterBulan =
-      bulanNama[
-        Number(pecah[1])
-      ];
-
-
-
-      filterTahun =
-      pecah[2];
+      tanggalInput =
+      tanggal.split("/")[0];
 
     }
 
 
 
 
-
-    // =====================
-    // LOOP SEMUA TAB
-    // =====================
 
     for(const sheet of sheets){
 
@@ -128,6 +78,7 @@ export async function POST(request) {
 
 
 
+
       // CSV parser
       const rows =
       csv
@@ -135,21 +86,26 @@ export async function POST(request) {
       .map(line=>{
 
 
-        let result=[];
-        let current="";
-        let quote=false;
+        let result = [];
+
+        let current = "";
+
+        let quote = false;
 
 
 
-        for(let i=0;i<line.length;i++){
+        for(
+          let i = 0;
+          i < line.length;
+          i++
+        ){
 
-
-          const char=line[i];
+          const char = line[i];
 
 
           if(char === '"'){
 
-            quote=!quote;
+            quote = !quote;
 
           }
 
@@ -159,15 +115,17 @@ export async function POST(request) {
           ){
 
             result.push(current);
-            current="";
+
+            current = "";
 
           }
 
-          else{
+          else {
 
-            current+=char;
+            current += char;
 
           }
+
 
         }
 
@@ -191,8 +149,7 @@ export async function POST(request) {
 
 
 
-
-      // Data mulai A5
+      // data mulai A5
 
       rows.forEach((row,index)=>{
 
@@ -211,57 +168,19 @@ export async function POST(request) {
 
 
 
-          const matchTanggal =
-          tanggalSheet.match(
-            /(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/
+          console.log(
+            "CEK:",
+            sheet.name,
+            tanggalSheet
           );
 
 
 
-          let cocok = false;
-
-
-
-          if(matchTanggal){
-
-
-
-            const hariSheet =
-            String(Number(matchTanggal[1]));
-
-
-
-            const bulanSheet =
-            matchTanggal[2];
-
-
-
-            const tahunSheet =
-            matchTanggal[3];
-
-
-
-            if(
-
-              hariSheet === filterHari &&
-
-              bulanSheet.toLowerCase()
-              ===
-              filterBulan.toLowerCase()
-
-              &&
-
-              tahunSheet === filterTahun
-
-            ){
-
-              cocok = true;
-
-            }
-
-
-          }
-
+          // FILTER TANGGAL
+          const cocok =
+          tanggalSheet.includes(
+            tanggalInput + " "
+          );
 
 
 
@@ -301,9 +220,7 @@ export async function POST(request) {
           }
 
 
-
         }
-
 
 
       });
@@ -323,11 +240,14 @@ export async function POST(request) {
       jumlahSheet:
       sheets.length,
 
+
       totalData:
       hasil.length,
 
+
       data:
       hasil
+
 
     });
 
