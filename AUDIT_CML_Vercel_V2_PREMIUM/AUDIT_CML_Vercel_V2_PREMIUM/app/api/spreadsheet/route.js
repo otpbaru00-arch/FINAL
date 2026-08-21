@@ -189,19 +189,31 @@ export async function POST(request) {
 
 
 
-          if(
-
-            tanggalSheet &&
-
-            tanggalSheet.includes(
-              tanggalPilih
-            )
-
-          ){
+          if(tanggalSheet){
 
 
 
-            hasil.push({
+            hasil.puhasil.push({
+
+  no:
+  hasil.length + 1,
+
+  tanggal:
+  tanggalSheet,
+
+  tele:
+  sheet.name,
+
+  member:
+  row[3],
+
+  nominal:
+  row[4],
+
+  keterangan:
+  row[5] || ""
+
+});sh({
 
               no:
               hasil.length + 1,
