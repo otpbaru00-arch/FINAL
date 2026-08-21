@@ -2,6 +2,7 @@ export async function POST(request) {
 
   try {
 
+
     const {
       url,
       tanggal
@@ -17,7 +18,7 @@ export async function POST(request) {
     if (!idMatch) {
 
       return Response.json({
-        error: "Link spreadsheet tidak valid"
+        error:"Link spreadsheet tidak valid"
       });
 
     }
@@ -26,53 +27,135 @@ export async function POST(request) {
     const spreadsheetId = idMatch[1];
 
 
-    const gidMatch = url.match(
-      /gid=([0-9]+)/
-    );
 
+    /*
+      Ambil metadata semua sheet
+    */
 
-    const gid = gidMatch
-      ? gidMatch[1]
-      : "0";
-
-
-
-    const csvUrl =
-    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
+    const metaUrl =
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json`;
 
 
 
-    const response = await fetch(csvUrl);
+    const metaResponse =
+    await fetch(metaUrl);
 
 
 
-    const csv = await response.text();
+    const metaText =
+    await metaResponse.text();
 
 
 
-    // CSV parser agar koma dalam tanggal tidak pecah
-    const rows = csv
+    const sheetRegex =
+    /"sheetId":"(.*?)","title":"(.*?)"/g;
+
+
+
+    let sheets=[];
+
+    let match;
+
+
+
+    while(
+      (match = sheetRegex.exec(metaText))
+    ){
+
+      sheets.push({
+
+        gid:match[1],
+
+        name:match[2]
+
+      });
+
+    }
+
+
+
+    if(sheets.length===0){
+
+      return Response.json({
+
+        error:"Tidak menemukan sheet"
+
+      });
+
+    }
+
+
+
+
+
+    let hasil=[];
+
+
+
+    const tanggalPilih =
+    tanggal
+    ? tanggal.split("/")[0]
+    : "";
+
+
+
+
+
+    /*
+      Loop semua tab
+    */
+
+
+    for(const sheet of sheets){
+
+
+
+      const csvUrl =
+      `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${sheet.gid}`;
+
+
+
+      const response =
+      await fetch(csvUrl);
+
+
+
+      const csv =
+      await response.text();
+
+
+
+
+
+      /*
+        CSV parser
+      */
+
+
+      const rows =
+      csv
       .split("\n")
-      .map(line => {
+      .map(line=>{
 
 
-        let result = [];
+        let data=[];
 
-        let current = "";
+        let current="";
 
-        let quote = false;
-
-
-
-        for(let i = 0; i < line.length; i++){
+        let quote=false;
 
 
-          const char = line[i];
+
+        for(let i=0;i<line.length;i++){
+
+
+          let char=line[i];
+
 
 
           if(char === '"'){
 
-            quote = !quote;
+            quote=!quote;
 
           }
 
@@ -81,15 +164,15 @@ export async function POST(request) {
             !quote
           ){
 
-            result.push(current);
+            data.push(current);
 
-            current = "";
+            current="";
 
           }
 
           else{
 
-            current += char;
+            current+=char;
 
           }
 
@@ -97,14 +180,15 @@ export async function POST(request) {
         }
 
 
-        result.push(current);
+        data.push(current);
 
 
 
-        return result.map(item =>
-          item
-          .replace(/^"|"$/g,"")
+        return data.map(x=>
+
+          x.replace(/^"|"$/g,"")
           .trim()
+
         );
 
 
@@ -113,106 +197,128 @@ export async function POST(request) {
 
 
 
-    let hasil = [];
+
+      /*
+        Data mulai baris 5
+        index 4
+      */
+
+
+      rows.forEach((row,index)=>{
+
+
+
+        if(index < 4)
+        return;
+
+
+
+        if(row.length >= 6){
+
+
+
+          const no =
+          row[0];
+
+
+
+          const tanggalSheet =
+          row[1];
+
+
+
+          const idMember =
+          row[3];
+
+
+
+          const nominal =
+          row[4];
+
+
+
+          const keterangan =
+          row[5];
 
 
 
 
 
-    rows.forEach((row,index)=>{
+          if(
 
+            tanggalSheet &&
 
-      // Data mulai A5
-      if(index < 4)
-      return;
+            tanggalSheet.includes(
+              tanggalPilih
+            )
 
-
-
-      if(row.length >= 6){
-
-
-
-        const no =
-        row[0];
-
-
-        const tanggalSheet =
-        row[1];
-
-
-        const tele =
-        row[2];
-
-
-        const member =
-        row[3];
-
-
-        const nominal =
-        row[4];
-
-
-        const keterangan =
-        row[5];
+          ){
 
 
 
-        console.log(
-          "TANGGAL ASLI:",
-          JSON.stringify(tanggalSheet)
-        );
+            hasil.push({
+
+              no:
+              hasil.length + 1,
+
+
+              tanggal:
+              tanggalSheet,
+
+
+              tele:
+              sheet.name,
+
+
+              member:
+              idMember,
+
+
+              nominal:
+              nominal,
+
+
+              keterangan:
+              keterangan
+
+
+            });
 
 
 
-        hasil.push({
-
-          no:
-          hasil.length + 1,
+          }
 
 
-          tanggal:
-          tanggalSheet,
+        }
 
 
-          tele:
-          tele,
-
-
-          member:
-          member,
-
-
-          nominal:
-          nominal,
-
-
-          keterangan:
-          keterangan
-
-
-        });
+      });
 
 
 
-      }
+    }
 
 
-    });
 
 
 
     return Response.json({
 
+
       success:true,
 
-      tanggalInput:
-      tanggal,
 
-      total:
+      jumlahSheet:
+      sheets.length,
+
+
+      totalData:
       hasil.length,
+
 
       data:
       hasil
+
 
 
     });
@@ -223,6 +329,7 @@ export async function POST(request) {
 
   catch(error){
 
+
     return Response.json({
 
       error:
@@ -230,6 +337,8 @@ export async function POST(request) {
 
     });
 
+
   }
+
 
 }
