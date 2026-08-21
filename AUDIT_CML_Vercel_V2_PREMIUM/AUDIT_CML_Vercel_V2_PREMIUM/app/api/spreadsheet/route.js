@@ -3,8 +3,10 @@ export async function POST(request) {
   try {
 
     const {
-      url
+      url,
+      tanggal
     } = await request.json();
+
 
 
     const idMatch = url.match(
@@ -15,10 +17,11 @@ export async function POST(request) {
     if (!idMatch) {
 
       return Response.json({
-        error:"Link spreadsheet tidak valid"
+        error: "Link spreadsheet tidak valid"
       });
 
     }
+
 
 
     const spreadsheetId = idMatch[1];
@@ -27,15 +30,15 @@ export async function POST(request) {
 
     const sheets = [
 
-      {name:"ALEX", gid:"0"},
-      {name:"LEO", gid:"1441670750"},
-      {name:"FEMAS", gid:"377635019"},
-      {name:"MARSHA", gid:"226541219"},
-      {name:"BAGAS", gid:"1681223704"},
-      {name:"MARTIN", gid:"634424372"},
-      {name:"ALVIN", gid:"221114496"},
-      {name:"SANDY", gid:"2081640526"},
-      {name:"ANDRE", gid:"2051849740"}
+      { name:"ALEX", gid:"0" },
+      { name:"LEO", gid:"1441670750" },
+      { name:"FEMAS", gid:"377635019" },
+      { name:"MARSHA", gid:"226541219" },
+      { name:"BAGAS", gid:"1681223704" },
+      { name:"MARTIN", gid:"634424372" },
+      { name:"ALVIN", gid:"221114496" },
+      { name:"SANDY", gid:"2081640526" },
+      { name:"ANDRE", gid:"2051849740" }
 
     ];
 
@@ -45,7 +48,68 @@ export async function POST(request) {
 
 
 
-    for (const sheet of sheets) {
+    // =====================
+    // KONVERSI TANGGAL INPUT
+    // =====================
+
+    let filterHari = "";
+    let filterBulan = "";
+    let filterTahun = "";
+
+
+    if(tanggal){
+
+      const pecah =
+      tanggal.split("/");
+
+
+      filterHari =
+      String(Number(pecah[0]));
+
+
+
+      const bulanNama = [
+
+        "",
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember"
+
+      ];
+
+
+
+      filterBulan =
+      bulanNama[
+        Number(pecah[1])
+      ];
+
+
+
+      filterTahun =
+      pecah[2];
+
+    }
+
+
+
+
+
+    // =====================
+    // LOOP SEMUA TAB
+    // =====================
+
+    for(const sheet of sheets){
+
 
 
       const csvUrl =
@@ -63,15 +127,18 @@ export async function POST(request) {
 
 
 
+
+      // CSV parser
       const rows =
       csv
       .split("\n")
       .map(line=>{
 
 
-        let data=[];
+        let result=[];
         let current="";
         let quote=false;
+
 
 
         for(let i=0;i<line.length;i++){
@@ -91,25 +158,25 @@ export async function POST(request) {
             !quote
           ){
 
-            data.push(current);
+            result.push(current);
             current="";
 
           }
 
           else{
 
-            current += char;
+            current+=char;
 
           }
-
 
         }
 
 
-        data.push(current);
+        result.push(current);
 
 
-        return data.map(item=>
+
+        return result.map(item=>
 
           item
           .replace(/^"|"$/g,"")
@@ -124,10 +191,12 @@ export async function POST(request) {
 
 
 
+
+      // Data mulai A5
+
       rows.forEach((row,index)=>{
 
 
-        // data mulai A5
         if(index < 4)
         return;
 
@@ -142,45 +211,99 @@ export async function POST(request) {
 
 
 
-          console.log(
-            "TAB:",
-            sheet.name,
-            "TANGGAL:",
-            tanggalSheet
+          const matchTanggal =
+          tanggalSheet.match(
+            /(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/
           );
 
 
 
-          hasil.push({
-
-            no:
-            hasil.length + 1,
+          let cocok = false;
 
 
-            tanggal:
-            tanggalSheet,
+
+          if(matchTanggal){
 
 
-            tele:
-            sheet.name,
+
+            const hariSheet =
+            String(Number(matchTanggal[1]));
 
 
-            member:
-            row[3] || "",
+
+            const bulanSheet =
+            matchTanggal[2];
 
 
-            nominal:
-            row[4] || "",
+
+            const tahunSheet =
+            matchTanggal[3];
 
 
-            keterangan:
-            row[5] || ""
 
-          });
+            if(
+
+              hariSheet === filterHari &&
+
+              bulanSheet.toLowerCase()
+              ===
+              filterBulan.toLowerCase()
+
+              &&
+
+              tahunSheet === filterTahun
+
+            ){
+
+              cocok = true;
+
+            }
+
+
+          }
+
+
+
+
+          if(cocok){
+
+
+            hasil.push({
+
+
+              no:
+              hasil.length + 1,
+
+
+              tanggal:
+              tanggalSheet,
+
+
+              tele:
+              sheet.name,
+
+
+              member:
+              row[3] || "",
+
+
+              nominal:
+              row[4] || "",
+
+
+              keterangan:
+              row[5] || ""
+
+
+            });
+
+
+          }
 
 
 
         }
+
 
 
       });
@@ -191,6 +314,8 @@ export async function POST(request) {
 
 
 
+
+
     return Response.json({
 
       success:true,
@@ -198,10 +323,8 @@ export async function POST(request) {
       jumlahSheet:
       sheets.length,
 
-
       totalData:
       hasil.length,
-
 
       data:
       hasil
@@ -224,5 +347,6 @@ export async function POST(request) {
 
 
   }
+
 
 }
