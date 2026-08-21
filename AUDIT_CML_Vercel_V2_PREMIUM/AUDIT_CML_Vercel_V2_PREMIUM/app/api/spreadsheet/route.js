@@ -2,23 +2,10 @@ export async function POST(request) {
 
   try {
 
-
     const {
       url,
       tanggal
     } = await request.json();
-
-
-
-    if (!url) {
-
-      return Response.json({
-
-        error: "Link spreadsheet kosong"
-
-      });
-
-    }
 
 
 
@@ -27,27 +14,21 @@ export async function POST(request) {
     );
 
 
-
     if (!idMatch) {
 
       return Response.json({
-
         error: "Link spreadsheet tidak valid"
-
       });
 
     }
 
 
-
     const spreadsheetId = idMatch[1];
-
 
 
     const gidMatch = url.match(
       /gid=([0-9]+)/
     );
-
 
 
     const gid = gidMatch
@@ -56,12 +37,8 @@ export async function POST(request) {
 
 
 
-
-
     const csvUrl =
     `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
-
-
 
 
 
@@ -73,9 +50,7 @@ export async function POST(request) {
 
 
 
-
-
-    // Parser CSV agar koma dalam tanggal tidak pecah
+    // CSV parser agar koma dalam tanggal tidak pecah
     const rows = csv
       .split("\n")
       .map(line => {
@@ -89,11 +64,10 @@ export async function POST(request) {
 
 
 
-        for(let i=0;i<line.length;i++){
+        for(let i = 0; i < line.length; i++){
 
 
-          const char=line[i];
-
+          const char = line[i];
 
 
           if(char === '"'){
@@ -109,7 +83,7 @@ export async function POST(request) {
 
             result.push(current);
 
-            current="";
+            current = "";
 
           }
 
@@ -126,8 +100,8 @@ export async function POST(request) {
         result.push(current);
 
 
-        return result.map(
-          item =>
+
+        return result.map(item =>
           item
           .replace(/^"|"$/g,"")
           .trim()
@@ -139,25 +113,7 @@ export async function POST(request) {
 
 
 
-
-    let hasil=[];
-
-
-
-
-
-    /*
-       Input tanggal:
-       20/08/2026
-
-       Ambil:
-       20
-    */
-
-    const tanggalPilih =
-    tanggal
-    ? tanggal.split("/")[0]
-    : "";
+    let hasil = [];
 
 
 
@@ -166,11 +122,9 @@ export async function POST(request) {
     rows.forEach((row,index)=>{
 
 
-
       // Data mulai A5
       if(index < 4)
       return;
-
 
 
 
@@ -182,25 +136,20 @@ export async function POST(request) {
         row[0];
 
 
-
         const tanggalSheet =
         row[1];
-
 
 
         const tele =
         row[2];
 
 
-
         const member =
         row[3];
 
 
-
         const nominal =
         row[4];
-
 
 
         const keterangan =
@@ -208,107 +157,71 @@ export async function POST(request) {
 
 
 
-
-
         console.log(
-          "DATA:",
-          tanggalSheet,
-          tele,
-          member
+          "TANGGAL ASLI:",
+          JSON.stringify(tanggalSheet)
         );
 
 
 
+        hasil.push({
+
+          no:
+          hasil.length + 1,
 
 
-        console.log(
-"FILTER",
-tanggalPilih,
-tanggalSheet,
-tanggalSheet.includes(tanggalPilih)
-);
+          tanggal:
+          tanggalSheet,
 
 
-if(
-
-tanggalSheet &&
-
-tanggalSheet.includes(
-tanggalPilih
-)
-
-){
+          tele:
+          tele,
 
 
-
-          hasil.push({
-
-
-            no:
-            hasil.length + 1,
+          member:
+          member,
 
 
-            tanggal:
-            tanggalSheet,
+          nominal:
+          nominal,
 
 
-            tele:
-            tele,
+          keterangan:
+          keterangan
 
 
-            member:
-            member,
-
-
-            nominal:
-            nominal,
-
-
-            keterangan:
-            keterangan
-
-
-
-          });
-
-
-
-        }
+        });
 
 
 
       }
 
 
-
     });
 
 
 
+    return Response.json({
+
+      success:true,
+
+      tanggalInput:
+      tanggal,
+
+      total:
+      hasil.length,
+
+      data:
+      hasil
 
 
-   return Response.json({
-
-success:true,
-
-filterTanggal:tanggalPilih,
-
-total:
-hasil.length,
-
-data:
-hasil.slice(0,5)
-
-});
-
-
+    });
 
 
 
   }
 
   catch(error){
-
 
     return Response.json({
 
@@ -317,8 +230,6 @@ hasil.slice(0,5)
 
     });
 
-
   }
-
 
 }
