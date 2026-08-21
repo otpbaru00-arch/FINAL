@@ -2,408 +2,467 @@
 
 import { useState } from "react";
 
+export default function Home() {
 
-export default function Home(){
+  const [url, setUrl] = useState("");
+  const [tanggal, setTanggal] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-const [url,setUrl] = useState("");
-const [tanggal,setTanggal] = useState("");
-const [data,setData] = useState([]);
-const [loading,setLoading] = useState(false);
 
+  async function tarikData() {
 
+    try {
 
-async function tarikData(){
+      setLoading(true);
 
-try{
 
-setLoading(true);
+      const response = await fetch("/api/spreadsheet", {
 
+        method: "POST",
 
-const response = await fetch(
-"/api/spreadsheet",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
+        headers: {
+          "Content-Type": "application/json"
+        },
 
-url:url,
+        body: JSON.stringify({
 
-tanggal:tanggal
+          url: url,
 
-})
+          tanggal: tanggal
 
-}
-);
+        })
 
+      });
 
-const result = await response.json();
 
 
-console.log(result);
+      const result = await response.json();
 
 
-if(result.data){
 
-setData(result.data);
+      console.log(result);
 
-}
-else{
 
-alert(result.error || "Data tidak ditemukan");
 
-}
+      if (result.data) {
 
+        setData(result.data);
 
-}
+      } else {
 
-catch(error){
+        alert(
+          result.error || "Data tidak ditemukan"
+        );
 
-console.log(error);
+      }
 
-alert("Gagal mengambil data");
 
-}
 
-finally{
+    } catch (error) {
 
-setLoading(false);
+      console.log(error);
 
-}
+      alert("Gagal mengambil data");
 
 
-}
+    } finally {
 
+      setLoading(false);
 
+    }
 
-return (
+  }
 
-<main className="page">
 
 
-<header>
 
-<h1>AUDIT CML</h1>
+  return (
 
-<p>
-Control Monitoring Ledger System
-</p>
+    <main className="page">
 
-</header>
 
+      <header className="header">
 
+        <h1>
+          AUDIT CML
+        </h1>
 
-<div className="grid">
+        <p>
+          Control Monitoring Ledger System
+        </p>
 
+      </header>
 
-<div className="stat">
 
-Total Tele
 
-<br/>
 
-<b>
-{data.length}
-</b>
 
-</div>
+      <div className="grid">
 
 
+        <div className="stat">
 
-<div className="stat">
+          <h3>
+            Total Tele
+          </h3>
 
-Total Member
+          <b>
+            {data.length}
+          </b>
 
-<br/>
+        </div>
 
-<b>
-{data.length}
-</b>
 
-</div>
 
 
 
-<div className="stat">
+        <div className="stat">
 
-Total Nominal
+          <h3>
+            Total Member
+          </h3>
 
-<br/>
+          <b>
+            {data.length}
+          </b>
 
-<b>
-Rp {data.reduce(
-(total,item)=>total + Number(item.nominal || 0),
-0
-)}
-</b>
+        </div>
 
-</div>
 
 
 
-<div className="stat">
 
-Status Arsip
+        <div className="stat">
 
-<br/>
+          <h3>
+            Total Nominal
+          </h3>
 
-<b>
-OPEN
-</b>
+          <b>
+            Rp {data.reduce(
 
-</div>
+              (total,item)=>
+              total + Number(item.nominal || 0),
 
+              0
 
+            )}
 
-</div>
+          </b>
 
+        </div>
 
 
 
 
-<section className="card">
 
+        <div className="stat">
 
-<h2>
-Tarik Laporan Harian
-</h2>
+          <h3>
+            Status Arsip
+          </h3>
 
+          <b>
+            OPEN
+          </b>
 
+        </div>
 
-<label>
-Link Google Spreadsheet
-</label>
 
+      </div>
 
-<input
 
-placeholder="Masukkan URL Google Spreadsheet"
 
-value={url}
 
-onChange={(e)=>setUrl(e.target.value)}
 
-/>
 
+      <section className="card">
 
 
-<label>
-Tanggal Audit
-</label>
+        <h2>
+          Tarik Laporan Harian
+        </h2>
 
 
-<input
 
-type="date"
+        <label>
+          Link Google Spreadsheet
+        </label>
 
-value={tanggal}
 
-onChange={(e)=>setTanggal(e.target.value)}
 
-/>
+        <input
 
+          type="text"
 
+          placeholder="Masukkan URL Google Spreadsheet"
 
-<button
+          value={url}
 
-onClick={tarikData}
+          onChange={(e)=>
+            setUrl(e.target.value)
+          }
 
->
+        />
 
-{
-loading ?
 
-"MENGAMBIL DATA..."
 
-:
 
-"TARIK DATA"
 
-}
+        <label>
+          Pilih Tanggal Audit
+        </label>
 
-</button>
 
 
+        <input
 
-</section>
+          type="date"
 
+          value={tanggal}
 
+          onChange={(e)=>
+            setTanggal(e.target.value)
+          }
 
+        />
 
 
 
 
-<section className="card">
 
+        <button
 
-<h2>
-Laporan Harian Gabungan
-</h2>
+          onClick={tarikData}
 
+        >
 
+          {
 
-<table>
+            loading
 
+            ?
 
-<thead>
+            "MENGAMBIL DATA..."
 
-<tr>
+            :
 
-<th>No</th>
+            "TARIK DATA"
 
-<th>Tanggal</th>
+          }
 
-<th>Nama Tele</th>
 
-<th>ID Member</th>
+        </button>
 
-<th>Nominal</th>
 
-<th>Keterangan</th>
 
+      </section>
 
-</tr>
 
-</thead>
 
 
 
 
-<tbody>
 
 
+      <section className="card">
 
-{
 
-data.length === 0 ?
+        <h2>
+          Laporan Harian Gabungan
+        </h2>
 
 
-<tr>
 
-<td colSpan="6">
+        <table>
 
-Belum ada data
 
-</td>
+          <thead>
 
-</tr>
+            <tr>
 
+              <th>
+                No
+              </th>
 
+              <th>
+                Tanggal
+              </th>
 
-:
+              <th>
+                Nama Tele
+              </th>
 
+              <th>
+                ID Member
+              </th>
 
-data.map((item,index)=>(
+              <th>
+                Nominal
+              </th>
 
+              <th>
+                Keterangan
+              </th>
 
-<tr key={index}>
 
+            </tr>
 
-<td>
 
-{item.no || index+1}
+          </thead>
 
-</td>
 
 
-<td>
 
-{item.tanggal}
 
-</td>
+          <tbody>
 
 
-<td>
+          {
 
-{item.tele}
+            data.length === 0
 
-</td>
+            ?
 
+            (
 
-<td>
+              <tr>
 
-{item.member}
+                <td colSpan="6">
 
-</td>
+                  Belum ada data
 
+                </td>
 
-<td>
+              </tr>
 
-{item.nominal}
+            )
 
-</td>
 
+            :
 
-<td>
 
-{item.keterangan}
+            (
 
-</td>
+              data.map((item,index)=>(
 
 
+                <tr key={index}>
 
-</tr>
 
+                  <td>
 
-))
+                    {item.no || index + 1}
 
+                  </td>
 
-}
 
 
+                  <td>
 
-</tbody>
+                    {item.tanggal}
 
+                  </td>
 
 
-</table>
 
+                  <td>
 
-</section>
+                    {item.tele}
 
+                  </td>
 
 
 
+                  <td>
 
+                    {item.member}
 
+                  </td>
 
-<div className="actions">
 
 
-<button>
+                  <td>
 
-EXPORT PDF
+                    {item.nominal}
 
-</button>
+                  </td>
 
 
 
-<button>
+                  <td>
 
-DOWNLOAD EXCEL
+                    {item.keterangan}
 
-</button>
+                  </td>
 
 
+                </tr>
 
-<button className="danger">
 
-LOCK ARSIP
+              ))
 
-</button>
+            )
 
 
+          }
 
-</div>
 
+          </tbody>
 
 
+        </table>
 
-</main>
 
 
-)
+      </section>
+
+
+
+
+
+
+
+
+      <div className="actions">
+
+
+        <button>
+
+          EXPORT PDF
+
+        </button>
+
+
+
+
+
+        <button>
+
+          DOWNLOAD EXCEL
+
+        </button>
+
+
+
+
+
+        <button className="danger">
+
+          LOCK ARSIP
+
+        </button>
+
+
+      </div>
+
+
+
+
+    </main>
+
+  );
 
 
 }
