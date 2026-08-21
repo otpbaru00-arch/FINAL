@@ -221,15 +221,23 @@ export async function POST(request) {
 
 
 
-        if(
+        console.log(
+"FILTER",
+tanggalPilih,
+tanggalSheet,
+tanggalSheet.includes(tanggalPilih)
+);
 
-          tanggalSheet &&
 
-          tanggalSheet.includes(
-            tanggalPilih
-          )
+if(
 
-        ){
+tanggalSheet &&
+
+tanggalSheet.includes(
+tanggalPilih
+)
+
+){
 
 
 
@@ -279,22 +287,19 @@ export async function POST(request) {
 
 
 
-    return Response.json({
+   return Response.json({
 
+success:true,
 
-      success:true,
+filterTanggal:tanggalPilih,
 
+total:
+hasil.length,
 
-      total:
-      hasil.length,
+data:
+hasil.slice(0,5)
 
-
-      data:
-      hasil
-
-
-
-    });
+});
 
 
 
