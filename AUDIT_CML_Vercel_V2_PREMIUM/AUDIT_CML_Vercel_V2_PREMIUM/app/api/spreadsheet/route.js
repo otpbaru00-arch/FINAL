@@ -69,90 +69,95 @@ export async function POST(request) {
 
 
 
-    if (!response.ok) {
-
-      return Response.json({
-
-        error: "Spreadsheet tidak bisa dibaca"
-
-      });
-
-    }
-
-
-
-
-
     const csv = await response.text();
 
 
 
 
 
-   const rows = csv
-.split("\n")
-.map(line => {
-
-  const result = [];
-  let current = "";
-  let quote = false;
+    // Parser CSV agar koma dalam tanggal tidak pecah
+    const rows = csv
+      .split("\n")
+      .map(line => {
 
 
-  for(let i=0;i<line.length;i++){
+        let result = [];
 
-    const char=line[i];
+        let current = "";
 
-
-    if(char === '"'){
-
-      quote=!quote;
-
-    }
-
-    else if(char === "," && !quote){
-
-      result.push(current);
-      current="";
-
-    }
-
-    else{
-
-      current += char;
-
-    }
-
-  }
-
-
-  result.push(current);
-
-  return result;
-
-});
-
-
-console.log("TOTAL ROW:", rows.length);
-
-console.log(
-"DATA AWAL:",
-rows.slice(0,10)
-);
+        let quote = false;
 
 
 
+        for(let i=0;i<line.length;i++){
 
 
-    let hasil = [];
+          const char=line[i];
+
+
+
+          if(char === '"'){
+
+            quote = !quote;
+
+          }
+
+          else if(
+            char === "," &&
+            !quote
+          ){
+
+            result.push(current);
+
+            current="";
+
+          }
+
+          else{
+
+            current += char;
+
+          }
+
+
+        }
+
+
+        result.push(current);
+
+
+        return result.map(
+          item =>
+          item
+          .replace(/^"|"$/g,"")
+          .trim()
+        );
+
+
+      });
 
 
 
 
+
+    let hasil=[];
+
+
+
+
+
+    /*
+       Input tanggal:
+       20/08/2026
+
+       Ambil:
+       20
+    */
 
     const tanggalPilih =
-      tanggal
-      ? tanggal.split("/")[0]
-      : "";
+    tanggal
+    ? tanggal.split("/")[0]
+    : "";
 
 
 
@@ -162,12 +167,9 @@ rows.slice(0,10)
 
 
 
-
-
-      // Lewati judul dan header (A1-A4)
+      // Data mulai A5
       if(index < 4)
       return;
-
 
 
 
@@ -176,74 +178,58 @@ rows.slice(0,10)
 
 
 
-
-
         const no =
-          row[0]
-          ?.replace(/"/g,"")
-          .trim();
-
-
+        row[0];
 
 
 
         const tanggalSheet =
-          row[1]
-          ?.replace(/"/g,"")
-          .trim();
-
-
+        row[1];
 
 
 
         const tele =
-          row[2]
-          ?.replace(/"/g,"")
-          .trim();
-
-
+        row[2];
 
 
 
         const member =
-          row[3]
-          ?.replace(/"/g,"")
-          .trim();
-
-
+        row[3];
 
 
 
         const nominal =
-          row[4]
-          ?.replace(/"/g,"")
-          .trim();
-
-
+        row[4];
 
 
 
         const keterangan =
-          row[5]
-          ?.replace(/"/g,"")
-          .trim();
+        row[5];
 
 
 
 
 
         console.log(
-          "CHECK TANGGAL:",
-          tanggalSheet
+          "DATA:",
+          tanggalSheet,
+          tele,
+          member
         );
 
 
 
 
 
-        if(tanggalSheet){
+        if(
 
+          tanggalSheet &&
 
+          tanggalSheet.includes(
+            tanggalPilih
+          )
+
+        ){
 
 
 
@@ -274,9 +260,8 @@ rows.slice(0,10)
             keterangan
 
 
+
           });
-
-
 
 
 
@@ -285,8 +270,6 @@ rows.slice(0,10)
 
 
       }
-
-
 
 
 
