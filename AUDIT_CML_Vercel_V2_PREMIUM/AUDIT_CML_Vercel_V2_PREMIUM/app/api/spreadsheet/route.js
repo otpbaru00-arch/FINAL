@@ -1,118 +1,172 @@
-export async function POST(request){
+export async function POST(request) {
 
-try{
+  try {
 
-const {
-url,
-tanggal
-}=await request.json();
+    const body = await request.json();
 
-
-const idMatch=url.match(
-/\/d\/(.*?)\//
-);
-
-
-if(!idMatch){
-
-return Response.json({
-error:"Link spreadsheet tidak valid"
-});
-
-}
-
-
-const spreadsheetId=idMatch[1];
-
-
-// Ambil spreadsheet public CSV
-
-const response = await fetch(
-`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`
-);
-
-
-const csv = await response.text();
+    const {
+      url,
+      tanggal
+    } = body;
 
 
 
-const rows = csv
-.split("\n")
-.map(row=>row.split(","));
+    if (!url) {
+
+      return Response.json({
+
+        error: "Link spreadsheet belum dimasukkan"
+
+      });
+
+    }
 
 
 
-let hasil=[];
-
-
-rows.forEach((row,index)=>{
-
-
-if(index===0) return;
-
-
-if(row.length>=5){
-
-
-hasil.push({
-
-no:hasil.length+1,
-
-tanggal:row[1],
-
-tele:row[2],
-
-member:row[3],
-
-nominal:row[4],
-
-keterangan:row[5] || ""
-
-});
-
-
-}
-
-
-});
+    const match = url.match(
+      /\/d\/(.*?)\//
+    );
 
 
 
-return Response.json({
+    if (!match) {
 
-success:true,
+      return Response.json({
 
-total:hasil.length,
+        error:"Format link spreadsheet tidak valid"
 
-data:hasil.filter(
-item=>{
+      });
 
-if(!tanggal)
-return true;
+    }
 
 
-return item.tanggal.includes(tanggal);
 
-}
-
-)
-
-});
+    const spreadsheetId = match[1];
 
 
-}
 
-catch(error){
+    /*
+      Membaca spreadsheet public
+      format CSV
+    */
+
+    const sheetUrl =
+
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
 
 
-return Response.json({
 
-error:error.message
-
-});
+    const response = await fetch(sheetUrl);
 
 
-}
+
+    if(!response.ok){
+
+      return Response.json({
+
+        error:"Spreadsheet tidak dapat dibaca"
+
+      });
+
+    }
+
+
+
+    const csv = await response.text();
+
+
+
+    const rows = csv
+    .split("\n")
+    .map(row =>
+      row.split(",")
+    );
+
+
+
+    let hasil = [];
+
+
+
+    rows.forEach((row,index)=>{
+
+
+
+      if(index===0)
+      return;
+
+
+
+      if(row.length >= 5){
+
+
+
+        const data = {
+
+          no: hasil.length + 1,
+
+          tanggal: row[0]?.trim(),
+
+          tele: row[1]?.trim(),
+
+          member: row[2]?.trim(),
+
+          nominal: row[3]?.trim(),
+
+          keterangan: row[4]?.trim() || ""
+
+        };
+
+
+
+        if(
+
+          !tanggal ||
+
+          data.tanggal === tanggal
+
+        ){
+
+          hasil.push(data);
+
+        }
+
+
+      }
+
+
+    });
+
+
+
+
+
+    return Response.json({
+
+      success:true,
+
+      total:hasil.length,
+
+      data:hasil
+
+    });
+
+
+
+  }
+
+
+  catch(error){
+
+
+    return Response.json({
+
+      error:error.message
+
+    });
+
+
+  }
 
 
 }
