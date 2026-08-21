@@ -1,208 +1,205 @@
-export async function POST(request) {
+export async function POST(request){
 
-  try {
+try{
 
-    const body = await request.json();
 
-    const {
-      url,
-      tanggal
-    } = body;
+const {
+url,
+tanggal
+}=await request.json();
 
 
 
-    if (!url) {
+const idMatch=url.match(
+/\/d\/(.*?)\//
+);
 
-      return Response.json({
 
-        error: "Link spreadsheet belum dimasukkan"
+if(!idMatch){
 
-      });
-
-    }
-
-
-
-    const match = url.match(
-      /\/d\/(.*?)\//
-    );
-
-
-
-    if (!match) {
-
-      return Response.json({
-
-        error:"Format link spreadsheet tidak valid"
-
-      });
-
-    }
-
-
-
-    const spreadsheetId = match[1];
-
-
-
-    /*
-      Membaca spreadsheet public
-      format CSV
-    */
-
-    const sheetUrl =
-
-    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
-
-
-
-    const response = await fetch(sheetUrl);
-
-
-
-    if(!response.ok){
-
-      return Response.json({
-
-        error:"Spreadsheet tidak dapat dibaca"
-
-      });
-
-    }
-
-
-
-    const csv = await response.text();
-
-
-
-    const rows = csv
-    .split("\n")
-    .map(row =>
-      row.split(",")
-    );
-
-
-
-    let hasil = [];
-
-
-
-    rows.forEach((row,index)=>{
-
-
-
-      if(index===0)
-      return;
-
-
-
-      if(row.length >= 5){
-
-
-
-        const data = {
-
-          no: hasil.length + 1,
-
-          tanggal: row[0]?.trim(),
-
-          tele: row[1]?.trim(),
-
-          member: row[2]?.trim(),
-
-          nominal: row[3]?.trim(),
-
-          keterangan: row[4]?.trim() || ""
-
-        };
-
-
-
-        if(!tanggal){
-
-  hasil.push(data);
+return Response.json({
+error:"Link spreadsheet tidak valid"
+});
 
 }
-else{
 
 
-const pilihTanggal = tanggal.split("-");
+
+const spreadsheetId=idMatch[1];
 
 
-const hari = pilihTanggal[2];
-const bulan = pilihTanggal[1];
-const tahun = pilihTanggal[0];
+
+/*
+Ambil daftar semua sheet
+*/
+
+const metaUrl =
+`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq`;
 
 
-const namaBulan = [
-"Januari",
-"Februari",
-"Maret",
-"April",
-"Mei",
-"Juni",
-"Juli",
-"Agustus",
-"September",
-"Oktober",
-"November",
-"Desember"
-];
+
+const metaResponse =
+await fetch(metaUrl);
 
 
-const formatTanggal = 
-`${hari} ${namaBulan[Number(bulan)-1]} ${tahun}`;
+
+const metaText =
+await metaResponse.text();
+
+
+
+const sheetRegex =
+/"sheetId":"(.*?)","title":"(.*?)"/g;
+
+
+
+let sheets=[];
+
+let match;
+
+
+
+while(
+(match=sheetRegex.exec(metaText)) !== null
+){
+
+sheets.push({
+
+gid:match[1],
+
+name:match[2]
+
+});
+
+
+}
+
+
+
+let hasil=[];
+
+
+
+/*
+Loop semua sheet
+*/
+
+
+for(const sheet of sheets){
+
+
+
+const csvUrl =
+
+`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${sheet.gid}`;
+
+
+
+const csvResponse =
+await fetch(csvUrl);
+
+
+
+const csv =
+await csvResponse.text();
+
+
+
+const rows =
+csv
+.split("\n")
+.map(row=>row.split(","));
+
+
+
+rows.forEach((row,index)=>{
+
+
+if(index===0)
+return;
+
+
+
+if(row.length>=5){
+
+
+
+const dataTanggal =
+row[1]?.trim();
 
 
 
 if(
-data.tanggal.includes(formatTanggal)
+
+dataTanggal &&
+dataTanggal.includes(
+tanggal
+)
+
 ){
 
-hasil.push(data);
+
+hasil.push({
+
+no:hasil.length+1,
+
+tanggal:dataTanggal,
+
+tele:sheet.name,
+
+member:row[3]?.trim(),
+
+nominal:row[4]?.trim(),
+
+keterangan:row[5]?.trim() || ""
+
+});
+
 
 }
 
 
+
 }
 
 
-      }
 
-
-    });
-
+});
 
 
 
-
-    return Response.json({
-
-      success:true,
-
-      total:hasil.length,
-
-      data:hasil
-
-    });
+}
 
 
 
-  }
+
+return Response.json({
+
+success:true,
+
+jumlahSheet:sheets.length,
+
+totalData:hasil.length,
+
+data:hasil
+
+});
 
 
-  catch(error){
+
+}
+
+catch(error){
 
 
-    return Response.json({
+return Response.json({
 
-      error:error.message
+error:error.message
 
-    });
+});
 
 
-  }
+}
 
 
 }
