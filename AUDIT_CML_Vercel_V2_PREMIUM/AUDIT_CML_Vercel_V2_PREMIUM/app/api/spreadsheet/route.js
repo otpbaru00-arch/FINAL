@@ -33,49 +33,26 @@ const gidMatch=url.match(
 const gid=gidMatch ? gidMatch[1] : "0";
 
 
+
 const csvUrl =
 `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
 
 
-const response =
-await fetch(csvUrl);
+
+const response = await fetch(csvUrl);
 
 
-const csv =
-await response.text();
+const csv = await response.text();
 
 
 
-// parser CSV dengan tanda kutip
-const rows = csv.match(
-/(?:\"(?:[^\"]|\"\")*\"|[^,\n]*)(?:,(?:\"(?:[^\"]|\"\")*\"|[^,\n]*))*/g
-);
+const rows = csv
+.split("\n")
+.map(row=>row.split(","));
 
 
 
 let hasil=[];
-
-
-
-function normalTanggal(input){
-
-if(!input)
-return "";
-
-
-// ambil angka tanggal
-const match=input.match(
-/(\d{1,2})\s+\w+\s+(\d{4})/
-);
-
-
-if(!match)
-return "";
-
-
-return match[1];
-
-}
 
 
 
@@ -84,7 +61,7 @@ tanggal.split("/")[0];
 
 
 
-rows.forEach((line,index)=>{
+rows.forEach((row,index)=>{
 
 
 if(index===0)
@@ -92,20 +69,53 @@ return;
 
 
 
-const col=line
-.split(",")
-.map(x=>x.replace(/"/g,"").trim());
+if(row.length>=6){
+
+
+const tanggalSheet =
+row[1]
+?.replace(/"/g,"")
+.trim();
 
 
 
-if(col.length>=6){
+const tele =
+row[2]
+?.replace(/"/g,"")
+.trim();
 
 
 
-const tanggalSheet=col[1];
+const member =
+row[3]
+?.replace(/"/g,"")
+.trim();
+
+
+
+const nominal =
+row[4]
+?.replace(/"/g,"")
+.trim();
+
+
+
+const keterangan =
+row[5]
+?.replace(/"/g,"")
+.trim();
+
+
+
+console.log(
+"CHECK:",
+tanggalSheet
+);
+
 
 
 if(
+
 tanggalSheet.includes(
 tanggalPilih
 )
@@ -119,13 +129,13 @@ no:hasil.length+1,
 
 tanggal:tanggalSheet,
 
-tele:col[2],
+tele,
 
-member:col[3],
+member,
 
-nominal:col[4],
+nominal,
 
-keterangan:col[5] || ""
+keterangan
 
 });
 
