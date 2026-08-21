@@ -1,138 +1,123 @@
 export async function POST(request) {
 
-  try {
+try {
 
-    const {
-      url,
-      tanggal
-    } = await request.json();
-
-
-    const idMatch = url.match(
-      /\/d\/(.*?)\//
-    );
+const {
+url,
+tanggal
+} = await request.json();
 
 
-    if (!idMatch) {
-
-      return Response.json({
-        error:"Link spreadsheet tidak valid"
-      });
-
-    }
+const idMatch = url.match(
+/\/d\/(.*?)\//
+);
 
 
-    const spreadsheetId = idMatch[1];
+if(!idMatch){
 
-
-    const csvUrl =
-    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
-
-
-    const response = await fetch(csvUrl);
-
-
-    const csv = await response.text();
-
-
-
-    const rows = csv
-    .split("\n")
-    .map(row =>
-      row.split(",")
-    );
-
-
-
-    let hasil=[];
-
-
-
-    rows.forEach((row,index)=>{
-
-
-      // skip header
-      if(index===0)
-      return;
-
-
-
-      if(row.length >= 6){
-
-
-
-        const no = row[0]?.trim();
-
-        const tanggalSheet = row[1]?.trim();
-
-        const tele = row[2]?.trim();
-
-        const member = row[3]?.trim();
-
-        const nominal = row[4]?.trim();
-
-        const keterangan = row[5]?.trim();
-
-
-
-        if(
-  tanggalSheet &&
-  tanggalSheet.includes(
-    tanggal.split("/")[0]
-  )
-){
-
-  hasil.push({
-
-    no,
-
-    tanggal:tanggalSheet,
-
-    tele,
-
-    member,
-
-    nominal,
-
-    keterangan
-
-  });
+return Response.json({
+error:"ID Spreadsheet tidak ditemukan"
+});
 
 }
 
 
-      }
+const spreadsheetId = idMatch[1];
 
 
-    });
+// ambil gid dari link
+const gidMatch = url.match(
+/gid=([0-9]+)/
+);
 
 
-
-    return Response.json({
-
-      success:true,
-
-      total:hasil.length,
-
-      data:hasil
-
-    });
+const gid = gidMatch ? gidMatch[1] : "0";
 
 
 
-  }
-
-  catch(error){
-
-
-    return Response.json({
-
-      error:error.message
-
-    });
+const csvUrl =
+`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
 
 
-  }
 
+const response = await fetch(csvUrl);
+
+
+
+const csv = await response.text();
+
+
+
+console.log("CSV DATA:", csv.substring(0,500));
+
+
+
+const rows = csv
+.split("\n")
+.map(row=>row.split(","));
+
+
+
+let hasil=[];
+
+
+
+rows.forEach((row,index)=>{
+
+
+if(index===0)
+return;
+
+
+
+if(row.length >= 6){
+
+
+hasil.push({
+
+no: row[0]?.trim(),
+
+tanggal: row[1]?.trim(),
+
+tele: row[2]?.trim(),
+
+member: row[3]?.trim(),
+
+nominal: row[4]?.trim(),
+
+keterangan: row[5]?.trim() || ""
+
+});
+
+
+}
+
+
+});
+
+
+
+return Response.json({
+
+success:true,
+
+jumlahData:hasil.length,
+
+data:hasil
+
+});
+
+
+}
+
+catch(error){
+
+return Response.json({
+
+error:error.message
+
+});
+
+}
 
 }
