@@ -10,6 +10,32 @@ const [data,setData] = useState([]);
 
 async function tarikData(){
 
+const res = await fetch(
+"/api/spreadsheet",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+url:url,
+
+tanggal:tanggal
+
+})
+
+});
+
+
+const result=await res.json();
+
+
+setData(result.data);
+
+
+}
+
 alert("Tombol TARIK DATA sudah aktif");
 
 }
