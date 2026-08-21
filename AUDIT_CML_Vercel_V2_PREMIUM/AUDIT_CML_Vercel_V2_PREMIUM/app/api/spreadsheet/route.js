@@ -3,9 +3,9 @@ export async function POST(request) {
   try {
 
     const {
-      url,
-      tanggal
+      url
     } = await request.json();
+
 
 
     const idMatch = url.match(
@@ -16,13 +16,15 @@ export async function POST(request) {
     if (!idMatch) {
 
       return Response.json({
-        error: "Link spreadsheet tidak valid"
+        error:"Link spreadsheet tidak valid"
       });
 
     }
 
 
+
     const spreadsheetId = idMatch[1];
+
 
 
     const sheets = [
@@ -40,19 +42,8 @@ export async function POST(request) {
     ];
 
 
+
     let hasil = [];
-
-
-
-    // ambil tanggal hari saja
-    let tanggalInput = "";
-
-    if(tanggal){
-
-      tanggalInput =
-      tanggal.split("/")[0];
-
-    }
 
 
 
@@ -79,33 +70,28 @@ export async function POST(request) {
 
 
 
-      // CSV parser
       const rows =
       csv
       .split("\n")
       .map(line=>{
 
 
-        let result = [];
-
-        let current = "";
-
-        let quote = false;
+        let data=[];
+        let current="";
+        let quote=false;
 
 
 
-        for(
-          let i = 0;
-          i < line.length;
-          i++
-        ){
+        for(let i=0;i<line.length;i++){
 
-          const char = line[i];
+
+          const char=line[i];
+
 
 
           if(char === '"'){
 
-            quote = !quote;
+            quote=!quote;
 
           }
 
@@ -114,13 +100,13 @@ export async function POST(request) {
             !quote
           ){
 
-            result.push(current);
+            data.push(current);
 
-            current = "";
+            current="";
 
           }
 
-          else {
+          else{
 
             current += char;
 
@@ -130,11 +116,11 @@ export async function POST(request) {
         }
 
 
-        result.push(current);
+        data.push(current);
 
 
 
-        return result.map(item=>
+        return data.map(item=>
 
           item
           .replace(/^"|"$/g,"")
@@ -149,11 +135,12 @@ export async function POST(request) {
 
 
 
-      // data mulai A5
+
 
       rows.forEach((row,index)=>{
 
 
+        // Data mulai A5
         if(index < 4)
         return;
 
@@ -169,55 +156,42 @@ export async function POST(request) {
 
 
           console.log(
-            "CEK:",
+            "DEBUG TANGGAL:",
             sheet.name,
-            tanggalSheet
+            JSON.stringify(tanggalSheet)
           );
 
 
 
-          // FILTER TANGGAL
-          const cocok =
-          tanggalSheet.includes(
-            tanggalInput + " "
-          );
+          hasil.push({
 
 
-
-          if(cocok){
-
-
-            hasil.push({
+            no:
+            hasil.length + 1,
 
 
-              no:
-              hasil.length + 1,
+            tanggal:
+            tanggalSheet,
 
 
-              tanggal:
-              tanggalSheet,
+            tele:
+            sheet.name,
 
 
-              tele:
-              sheet.name,
+            member:
+            row[3] || "",
 
 
-              member:
-              row[3] || "",
+            nominal:
+            row[4] || "",
 
 
-              nominal:
-              row[4] || "",
+            keterangan:
+            row[5] || ""
 
 
-              keterangan:
-              row[5] || ""
+          });
 
-
-            });
-
-
-          }
 
 
         }
@@ -237,6 +211,7 @@ export async function POST(request) {
 
       success:true,
 
+
       jumlahSheet:
       sheets.length,
 
@@ -254,6 +229,7 @@ export async function POST(request) {
 
 
   }
+
 
   catch(error){
 
