@@ -2,10 +2,11 @@ export async function POST(request) {
 
   try {
 
+
     const {
-      url,
-      tanggal
+      url
     } = await request.json();
+
 
 
     const idMatch = url.match(
@@ -25,7 +26,7 @@ export async function POST(request) {
     const spreadsheetId = idMatch[1];
 
 
-    // Daftar semua tab spreadsheet
+
     const sheets = [
 
       {
@@ -77,17 +78,12 @@ export async function POST(request) {
 
 
 
-    let hasil=[];
-
-
-    const tanggalPilih =
-    tanggal
-    ? tanggal.split("/")[0]
-    : "";
+    let hasil = [];
 
 
 
-    for(const sheet of sheets){
+    for (const sheet of sheets) {
+
 
 
       const csvUrl =
@@ -106,7 +102,6 @@ export async function POST(request) {
 
 
 
-      // CSV parser
       const rows =
       csv
       .split("\n")
@@ -127,6 +122,7 @@ export async function POST(request) {
           const char=line[i];
 
 
+
           if(char === '"'){
 
             quote=!quote;
@@ -144,11 +140,12 @@ export async function POST(request) {
 
           }
 
-          else{
+          else {
 
             current += char;
 
           }
+
 
         }
 
@@ -157,9 +154,9 @@ export async function POST(request) {
 
 
 
-        return data.map(x=>
+        return data.map(item=>
 
-          x
+          item
           .replace(/^"|"$/g,"")
           .trim()
 
@@ -171,10 +168,11 @@ export async function POST(request) {
 
 
 
-      // Data mulai A5
+
       rows.forEach((row,index)=>{
 
 
+        // data mulai A5
         if(index < 4)
         return;
 
@@ -184,71 +182,41 @@ export async function POST(request) {
 
 
 
-          const tanggalSheet =
-          row[1];
+          hasil.push({
+
+            no:
+            hasil.length + 1,
 
 
-
-          if(tanggalSheet){
-
-
-
-            hasil.puhasil.push({
-
-  no:
-  hasil.length + 1,
-
-  tanggal:
-  tanggalSheet,
-
-  tele:
-  sheet.name,
-
-  member:
-  row[3],
-
-  nominal:
-  row[4],
-
-  keterangan:
-  row[5] || ""
-
-});sh({
-
-              no:
-              hasil.length + 1,
+            tanggal:
+            row[1] || "",
 
 
-              tanggal:
-              tanggalSheet,
+            tele:
+            sheet.name,
 
 
-              tele:
-              sheet.name,
+            member:
+            row[3] || "",
 
 
-              member:
-              row[3],
+            nominal:
+            row[4] || "",
 
 
-              nominal:
-              row[4],
+            keterangan:
+            row[5] || ""
 
+          });
 
-              keterangan:
-              row[5] || ""
-
-
-            });
-
-
-          }
 
 
         }
 
 
+
       });
+
 
 
 
@@ -256,18 +224,24 @@ export async function POST(request) {
 
 
 
+
+
     return Response.json({
 
       success:true,
 
+
       jumlahSheet:
       sheets.length,
+
 
       totalData:
       hasil.length,
 
+
       data:
       hasil
+
 
     });
 
@@ -287,5 +261,6 @@ export async function POST(request) {
 
 
   }
+
 
 }
