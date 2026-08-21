@@ -91,7 +91,45 @@ export async function POST(request) {
 
    const rows = csv
 .split("\n")
-.map(row => row.split(","));
+.map(line => {
+
+  const result = [];
+  let current = "";
+  let quote = false;
+
+
+  for(let i=0;i<line.length;i++){
+
+    const char=line[i];
+
+
+    if(char === '"'){
+
+      quote=!quote;
+
+    }
+
+    else if(char === "," && !quote){
+
+      result.push(current);
+      current="";
+
+    }
+
+    else{
+
+      current += char;
+
+    }
+
+  }
+
+
+  result.push(current);
+
+  return result;
+
+});
 
 
 console.log("TOTAL ROW:", rows.length);
