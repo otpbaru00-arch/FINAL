@@ -32,57 +32,66 @@ export async function POST(request) {
       Ambil metadata semua sheet
     */
 
-    const metaUrl =
-    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json`;
+    const htmlUrl =
+`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 
 
 
-    const metaResponse =
-    await fetch(metaUrl);
+const htmlResponse =
+await fetch(htmlUrl);
 
 
 
-    const metaText =
-    await metaResponse.text();
+const html =
+await htmlResponse.text();
 
 
 
-    const sheetRegex =
-    /"sheetId":"(.*?)","title":"(.*?)"/g;
+let sheets=[];
 
 
 
-    let sheets=[];
-
-    let match;
-
-
-
-    while(
-      (match = sheetRegex.exec(metaText))
-    ){
-
-      sheets.push({
-
-        gid:match[1],
-
-        name:match[2]
-
-      });
-
-    }
+const regex =
+/\{"sheetId":"(\d+)","title":"([^"]+)"/g;
 
 
 
-    if(sheets.length===0){
+let match;
 
-      return Response.json({
 
-        error:"Tidak menemukan sheet"
 
-      });
+while(
+(match = regex.exec(html))
+){
 
-    }
+sheets.push({
+
+gid:match[1],
+
+name:match[2]
+
+});
+
+}
+
+
+
+console.log(
+"SHEET TERDETEKSI:",
+sheets
+);
+
+
+
+if(sheets.length===0){
+
+return Response.json({
+
+error:"Sheet tidak terbaca. Pastikan spreadsheet public."
+
+});
+
+}
 
 
 
