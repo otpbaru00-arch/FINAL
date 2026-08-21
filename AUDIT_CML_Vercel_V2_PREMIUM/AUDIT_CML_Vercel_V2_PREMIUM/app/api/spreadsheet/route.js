@@ -119,17 +119,53 @@ export async function POST(request) {
 
 
 
-        if(
+        if(!tanggal){
 
-          !tanggal ||
+  hasil.push(data);
 
-          data.tanggal === tanggal
+}
+else{
 
-        ){
 
-          hasil.push(data);
+const pilihTanggal = tanggal.split("-");
 
-        }
+
+const hari = pilihTanggal[2];
+const bulan = pilihTanggal[1];
+const tahun = pilihTanggal[0];
+
+
+const namaBulan = [
+"Januari",
+"Februari",
+"Maret",
+"April",
+"Mei",
+"Juni",
+"Juli",
+"Agustus",
+"September",
+"Oktober",
+"November",
+"Desember"
+];
+
+
+const formatTanggal = 
+`${hari} ${namaBulan[Number(bulan)-1]} ${tahun}`;
+
+
+
+if(
+data.tanggal.includes(formatTanggal)
+){
+
+hasil.push(data);
+
+}
+
+
+}
 
 
       }
