@@ -76,31 +76,29 @@ export async function POST(request) {
 
 
         if(
-          tanggalSheet &&
-          tanggalSheet.includes(
-            tanggal
-          )
-        ){
+  tanggalSheet &&
+  tanggalSheet.includes(
+    tanggal.split("/")[0]
+  )
+){
 
+  hasil.push({
 
-          hasil.push({
+    no,
 
-            no,
+    tanggal:tanggalSheet,
 
-            tanggal:tanggalSheet,
+    tele,
 
-            tele,
+    member,
 
-            member,
+    nominal,
 
-            nominal,
+    keterangan
 
-            keterangan
+  });
 
-          });
-
-
-        }
+}
 
 
       }
