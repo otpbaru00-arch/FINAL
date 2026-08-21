@@ -1,75 +1,118 @@
-export async function POST(request) {
+export async function POST(request){
 
-  try {
+try{
 
-    const body = await request.json();
-
-    const {
-      url,
-      tanggal
-    } = body;
+const {
+url,
+tanggal
+}=await request.json();
 
 
-    if (!url) {
-
-      return Response.json({
-        error: "Link spreadsheet kosong"
-      });
-
-    }
+const idMatch=url.match(
+/\/d\/(.*?)\//
+);
 
 
-    const id = url.match(
-      /\/d\/(.*?)\//
-    );
+if(!idMatch){
+
+return Response.json({
+error:"Link spreadsheet tidak valid"
+});
+
+}
 
 
-    if (!id) {
-
-      return Response.json({
-        error: "Format link spreadsheet salah"
-      });
-
-    }
+const spreadsheetId=idMatch[1];
 
 
-    const spreadsheetId = id[1];
+// Ambil spreadsheet public CSV
+
+const response = await fetch(
+`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`
+);
 
 
-    return Response.json({
-
-      success: true,
-
-      spreadsheetId,
-
-      tanggal,
-
-      data: [
-
-        {
-          no: 1,
-          tanggal: tanggal,
-          tele: "MARSHA",
-          member: "TEST001",
-          nominal: 50,
-          keterangan: "API berhasil aktif"
-        }
-
-      ]
-
-    });
+const csv = await response.text();
 
 
-  } catch(error) {
+
+const rows = csv
+.split("\n")
+.map(row=>row.split(","));
 
 
-    return Response.json({
 
-      error: error.message
-
-    });
+let hasil=[];
 
 
-  }
+rows.forEach((row,index)=>{
+
+
+if(index===0) return;
+
+
+if(row.length>=5){
+
+
+hasil.push({
+
+no:hasil.length+1,
+
+tanggal:row[1],
+
+tele:row[2],
+
+member:row[3],
+
+nominal:row[4],
+
+keterangan:row[5] || ""
+
+});
+
+
+}
+
+
+});
+
+
+
+return Response.json({
+
+success:true,
+
+total:hasil.length,
+
+data:hasil.filter(
+item=>{
+
+if(!tanggal)
+return true;
+
+
+return item.tanggal.includes(tanggal);
+
+}
+
+)
+
+});
+
+
+}
+
+catch(error){
+
+
+return Response.json({
+
+error:error.message
+
+});
+
+
+}
+
 
 }
