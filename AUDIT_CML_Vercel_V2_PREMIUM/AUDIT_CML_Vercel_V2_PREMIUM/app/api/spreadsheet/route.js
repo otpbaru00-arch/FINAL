@@ -1,73 +1,140 @@
-export async function POST(request){
+export async function POST(request) {
 
-try{
+  try {
 
-const {
-url,
-tanggal
-}=await request.json();
-
-
-
-const idMatch=url.match(
-/\/d\/(.*?)\//
-);
+    const {
+      url,
+      tanggal
+    } = await request.json();
 
 
-if(!idMatch){
-
-return Response.json({
-error:"ID Spreadsheet tidak ditemukan"
-});
-
-}
+    const idMatch = url.match(
+      /\/d\/(.*?)\//
+    );
 
 
-const spreadsheetId=idMatch[1];
+    if (!idMatch) {
+
+      return Response.json({
+        error:"Link spreadsheet tidak valid"
+      });
+
+    }
 
 
-
-const urlSheet =
-`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json`;
+    const spreadsheetId = idMatch[1];
 
 
-
-const response =
-await fetch(urlSheet);
-
+    const csvUrl =
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
 
 
-const text =
-await response.text();
+    const response = await fetch(csvUrl);
+
+
+    const csv = await response.text();
 
 
 
-console.log(text.substring(0,500));
+    const rows = csv
+    .split("\n")
+    .map(row =>
+      row.split(",")
+    );
 
 
 
-return Response.json({
-
-success:true,
-
-message:"Spreadsheet terbaca",
-
-raw:text.substring(0,500)
-
-});
+    let hasil=[];
 
 
-}
 
-catch(error){
+    rows.forEach((row,index)=>{
 
-return Response.json({
 
-error:error.message
+      // skip header
+      if(index===0)
+      return;
 
-});
 
-}
+
+      if(row.length >= 6){
+
+
+
+        const no = row[0]?.trim();
+
+        const tanggalSheet = row[1]?.trim();
+
+        const tele = row[2]?.trim();
+
+        const member = row[3]?.trim();
+
+        const nominal = row[4]?.trim();
+
+        const keterangan = row[5]?.trim();
+
+
+
+        if(
+          tanggalSheet &&
+          tanggalSheet.includes(
+            tanggal
+          )
+        ){
+
+
+          hasil.push({
+
+            no,
+
+            tanggal:tanggalSheet,
+
+            tele,
+
+            member,
+
+            nominal,
+
+            keterangan
+
+          });
+
+
+        }
+
+
+      }
+
+
+    });
+
+
+
+    return Response.json({
+
+      success:true,
+
+      total:hasil.length,
+
+      data:hasil
+
+    });
+
+
+
+  }
+
+  catch(error){
+
+
+    return Response.json({
+
+      error:error.message
+
+    });
+
+
+  }
 
 
 }
