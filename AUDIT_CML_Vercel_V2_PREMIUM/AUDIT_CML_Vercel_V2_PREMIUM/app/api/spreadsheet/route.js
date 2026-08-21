@@ -5,10 +5,10 @@ try {
 const {
 url,
 tanggal
-} = await request.json();
+}=await request.json();
 
 
-const idMatch = url.match(
+const idMatch=url.match(
 /\/d\/(.*?)\//
 );
 
@@ -16,45 +16,40 @@ const idMatch = url.match(
 if(!idMatch){
 
 return Response.json({
-error:"ID Spreadsheet tidak ditemukan"
+error:"Link spreadsheet tidak valid"
 });
 
 }
 
 
-const spreadsheetId = idMatch[1];
+const spreadsheetId=idMatch[1];
 
 
-// ambil gid dari link
-const gidMatch = url.match(
+const gidMatch=url.match(
 /gid=([0-9]+)/
 );
 
 
-const gid = gidMatch ? gidMatch[1] : "0";
-
+const gid=gidMatch ? gidMatch[1] : "0";
 
 
 const csvUrl =
 `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
 
 
-
-const response = await fetch(csvUrl);
-
-
-
-const csv = await response.text();
+const response =
+await fetch(csvUrl);
 
 
-
-console.log("CSV DATA:", csv.substring(0,500));
+const csv =
+await response.text();
 
 
 
-const rows = csv
-.split("\n")
-.map(row=>row.split(","));
+// parser CSV dengan tanda kutip
+const rows = csv.match(
+/(?:\"(?:[^\"]|\"\")*\"|[^,\n]*)(?:,(?:\"(?:[^\"]|\"\")*\"|[^,\n]*))*/g
+);
 
 
 
@@ -62,7 +57,34 @@ let hasil=[];
 
 
 
-rows.forEach((row,index)=>{
+function normalTanggal(input){
+
+if(!input)
+return "";
+
+
+// ambil angka tanggal
+const match=input.match(
+/(\d{1,2})\s+\w+\s+(\d{4})/
+);
+
+
+if(!match)
+return "";
+
+
+return match[1];
+
+}
+
+
+
+const tanggalPilih =
+tanggal.split("/")[0];
+
+
+
+rows.forEach((line,index)=>{
 
 
 if(index===0)
@@ -70,24 +92,45 @@ return;
 
 
 
-if(row.length >= 6){
+const col=line
+.split(",")
+.map(x=>x.replace(/"/g,"").trim());
+
+
+
+if(col.length>=6){
+
+
+
+const tanggalSheet=col[1];
+
+
+if(
+tanggalSheet.includes(
+tanggalPilih
+)
+
+){
 
 
 hasil.push({
 
-no: row[0]?.trim(),
+no:hasil.length+1,
 
-tanggal: row[1]?.trim(),
+tanggal:tanggalSheet,
 
-tele: row[2]?.trim(),
+tele:col[2],
 
-member: row[3]?.trim(),
+member:col[3],
 
-nominal: row[4]?.trim(),
+nominal:col[4],
 
-keterangan: row[5]?.trim() || ""
+keterangan:col[5] || ""
 
 });
+
+
+}
 
 
 }
@@ -101,7 +144,7 @@ return Response.json({
 
 success:true,
 
-jumlahData:hasil.length,
+total:hasil.length,
 
 data:hasil
 
